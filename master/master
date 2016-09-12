@@ -1,0 +1,49 @@
+open_mode: True
+auto_accept: True
+
+file_roots:
+  base:
+    - /srv/salt/base/states
+  prod:
+    - /srv/salt/prod/states
+
+pillar_opts: True
+
+pillar_roots:
+  base:
+    - /srv/salt/base/pillars
+  prod:
+    - /srv/salt/prod/pillars
+
+extension_modules : /srv/salt/ext
+
+ext_pillar:
+  - ims:
+      url: http://imsapi.trading.imc.intra/imsapi
+      tags: http://taggingapi/overlord
+  - pepa:
+      resource: host
+      sequence:
+        - default:
+        - hostname:
+            name: input
+            base_only: True
+        - environment:
+        - location..region:
+            name: region
+        - location..country:
+            name: country
+        - location..datacenter:
+            name: datacenter
+        - host_type:
+        - roles:
+        - hostname:
+            name: override
+            base_only: True
+      subkey: True
+
+log_level: debug
+
+#log_granular_levels:
+#  salt: warning
+#  salt.loaded.ext.pillar.pepa: debug
