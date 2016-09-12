@@ -15,7 +15,7 @@ pillar_roots:
   prod:
     - /srv/salt/prod/pillars
 
-extension_modules : /srv/salt/ext
+extension_modules : /srv/salt/base/ext
 
 ext_pillar:
   - ims:
@@ -41,6 +41,7 @@ ext_pillar:
             name: override
             base_only: True
       subkey: True
+  - rest_pillar: 'http://web:5000'
 
 log_level: debug
 
