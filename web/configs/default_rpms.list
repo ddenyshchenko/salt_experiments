@@ -1,7 +1,7 @@
 openssh-server
 openssh-clients
 sudo
-tar1
+tar
 unzip
 vim
 wget
