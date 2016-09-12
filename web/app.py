@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, make_response, request, abort
+from flask import Flask, make_response, request
 import json
 import os
 
@@ -9,13 +9,14 @@ SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_rpms_list(hostname='default'):
-    filename = hostname + '_rpms.list'
+    filename = hostname + '.rpms'
     try:
         with open(SCRIPTPATH + "/configs/" + filename, 'r') as f:
             rpms_list = {"rpms_list": f.read().splitlines()}
             return rpms_list
     except IOError:
-        return False
+        rpms_list = {"rpms_list": []}
+        return rpms_list
 
 
 @app.route('/api/v1/rpms', methods=['GET'])
@@ -25,8 +26,8 @@ def download_rpms_list():
         hostname = 'default'
 
     rpms_list = get_rpms_list(hostname)
-    if not rpms_list:
-        abort(404)
+    # if not rpms_list:
+    #     abort(404)
     response = make_response(json.dumps(rpms_list))
 
     # add filename to headers
