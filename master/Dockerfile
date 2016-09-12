@@ -3,7 +3,7 @@ FROM centos:7.2.1511
 RUN set -ex ;\
     yum install -y epel-release ;\
     yum install -y salt-master ;\
-    yum install vim tree
+    yum install -y tree
 
 COPY master /etc/salt/master
 
