@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 from flask import Flask, make_response, request, abort
 import json
+import os
 
 app = Flask(__name__)
+
+SCRIPTPATH = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_rpms_list(hostname='default'):
     filename = hostname + '_rpms.list'
     try:
-        with open("./configs/" + filename, 'r') as f:
+        with open(SCRIPTPATH + "/configs/" + filename, 'r') as f:
             rpms_list = {"rpms_list": f.read().splitlines()}
             return rpms_list
     except IOError:
@@ -33,4 +36,4 @@ def download_rpms_list():
     return response
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
