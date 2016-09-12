@@ -1,0 +1,3 @@
+base:
+  '*':
+    - packages_set
