@@ -1,0 +1,11 @@
+openssh-server
+openssh-clients
+sudo
+tar1
+unzip
+vim
+wget
+krb5-libs
+krb5-workstation
+net-tools
+ntp
