@@ -7,6 +7,8 @@ master:
   volumes:
   - ~/code/salt-tutorial/salt:/srv/salt/base
   hostname: salt
+  links:
+    - web:web
 minion1:
   container_name: minion1
   build: minion
@@ -19,3 +21,9 @@ minion2:
   links:
   - master:salt
   hostname: minion2
+web:
+  container_name: web-rest
+  build: web
+  ports:
+    - 5000:5000
+  hostname: web
