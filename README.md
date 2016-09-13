@@ -1,120 +1,146 @@
-Start by forking this repository.
+# How to test solution
 
-# Getting started
-
-[Official Salt tutorial](https://docs.saltstack.com/en/latest/topics/tutorials/states_pt1.html)
-
-## Start containers
-
+## Step 1 - build docker images
 ```bash
 docker-compose build
+```
+
+## Step 2 - run all containers
+```bash
 docker-compose up
 ```
 
-## Enter container
-
+## Step 3 - attach to salt master container
 ```bash
 docker exec -it master bash
 ```
 
-## Sync grains
-
-Grains are scripts designed to gather informations about your minions (servers). These are not automatically synced on startup,
-however if you run a highstate they will be synced.
+## Step 4 - check custom pillar
+is located in /srv/salt/base/ext/pillar/rest_pillar.py
 
 ```bash
-salt \* saltutil.sync_all
+salt \* pillar.items
+```
 
+find rpms_list key with assigned packages
+
+```
 minion1:
     ----------
-    beacons:
-    grains:
-        - grains.cpuinfo
+    default:
+        default
+...
+   rpms_list:
+        - bind-utils
+        - bzip2
+        - curl
+        - git
+        - jq
+        - krb5-libs
+        - krb5-workstation
+        - lsof
+        - mlocate
+        - openldap-clients
+        - openssh-clients
+        - openssh-server
+        - tar
+        - telnet
+        - unzip
+        - wget
+
+minion2:
+    ----------
+    default:
+        default
+...
+    rpms_list:
+        - telnet
+        - lsof
+
 ```
 
-You'll see that it syncs a custom grain that gathers CPU info.
-
-## Writing a state that maintains motd
-
-First create the initial state file init.sls.
+## Step 5 - apply salt state
+is located in /srv/salt/base/states/packages_set/init.sls
 
 ```bash
-mkdir -p salt/states/motd/files
-vi salt/states/motd/init.sls
+salt \* state.apply
 ```
 
-```yaml
-motd-packages:
-  pkg.latest:
-  - pkgs:
-    - redhat-lsb
+go to the minions containers and shure that packages exist
 
-motd:
-  file.managed:
-  - name: /etc/motd
-  - user: root
-  - group: wheel
-  - mode: 644
-  - source: salt://motd/files/motd.jinja
-  - template: jinja
-```
+## Step 6 - change packages for appropriate minion
+* attach to web-rest container
 
 ```bash
-vi salt/states/motd/files/motd.jinja
+docker exec -it web-rest bash
 ```
 
-```
-OS: {{ osfullname }}
-OS Version: {{ osrelease }}
-
-```
-
-## Apply state
+* go to the configs folder
 
 ```bash
-salt \* state.sls motd
+cd /opt/web/configs
 ```
 
-## Stop and remove containers
+* name convention for packegs lists files:
+```
+<fqdn for minions>.rpms
+```
 
-Ctrl+C will stop docker-compose.
+* edit packages list, for example, add some package to minions2.rpms file
+
+
+* check pillar rpms_list with
 
 ```bash
-docker-compose rm -ya
+salt \* pillar.items
 ```
 
-## Run command on minions
+make shure that added packages exist in pillar
+
+* apply new state
+
 
 ```bash
-salt \* cmd.run hostname
+salt \* state.apply
 ```
 
-# Run command without entering the container
+# Files in repository by assignment points
+## 1 - Flask web service
+Location is ./web
 
+To check separatedly:
 ```bash
-docker exec -it master salt \* cmd.run hostname
+cd ./web
+# run REST service
+./app.py
+
+# open new terminal in the same ./web dir
+# request packages for minion1
+curl http://localhost:5000/api/v1/rpms?hostname=minion1
+# request packages for minion2
+curl http://localhost:5000/api/v1/rpms?hostname=minion2
+# request packages by default
+curl http://localhost:5000/api/v1/rpms
+# Download json file for minion1
+wget --content-disposition http://localhost:5000/api/v1/rpms?hostname=minion1
+cat minion1.json
 ```
 
-# List minions
+## 2 - Docker container that runs this as a service
+./web/Dockerfile
 
-```bash
-salt-key
-```
+## 3 - add the Docker container as part of the Docker Compose file
 
-# List grains
+./docker-compose.yml
 
-```bash
-salt \* grains.items
-```
+## 4 - custom External Pillar in SaltStack that does a HTTP request to your Flask service and fetches the JSON file and adds the list to the Pillars namespace
+./salt/ext/pillar/rest_pillar.py
 
-# List pillars
+## 5 - Salt State that installs the RPM's list in the JSON file
+./salt/states/packages_set/init.sls
 
-```bash
-salt \* pillars.items
-```
+## 6 - add a parameter to the REST service hostname and allow for overrides spec. for a host
+For REST service realized in ./web/app.py with different lists files which name plus .rpms extension should be equal minion's FQDN.
+For custom pillar realized in ./salt/ext/pillar/rest_pillar.py with assignment __grains__['fqdn'] value to hostname parameter.
 
-# Sync all
 
-```bash
-salt \* saltutil.sync_all
-```
